@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculadora de Interés Compuesto Avanzada</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2em;
+      background-color: #f9f9f9;
+    }
+    .card {
+      background: white;
+      padding: 2em;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 1em;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #resultado {
+      margin-top: 1em;
+      font-weight: bold;
+    }
+    canvas {
+      margin-top: 2em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Calculadora de Interés Compuesto Avanzada</h2>
+    <label for="capital">Capital inicial ($):</label>
+    <input type="number" id="capital" placeholder="Ej. 1000">
+
+    <label for="tasa">Tasa de interés anual (%):</label>
+    <input type="number" id="tasa" placeholder="Ej. 5">
+
+    <label for="periodos">Años:</label>
+    <input type="number" id="periodos" placeholder="Ej. 10">
+
+    <label for="frecuencia">Frecuencia de capitalización:</label>
+    <select id="frecuencia">
+      <option value="1">Anual</option>
+      <option value="12">Mensual</option>
+      <option value="365">Diaria</option>
+    </select>
+
+    <label for="aporte">Aporte adicional periódico ($):</label>
+    <input type="number" id="aporte" placeholder="Ej. 100">
+
+    <button onclick="calcularInteresCompuesto()">Calcular</button>
+
+    <div id="resultado"></div>
+    <canvas id="grafica" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    function calcularInteresCompuesto() {
+      const capital = parseFloat(document.getElementById('capital').value);
+      const tasa = parseFloat(document.getElementById('tasa').value) / 100;
+      const años = parseFloat(document.getElementById('periodos').value);
+      const frecuencia = parseInt(document.getElementById('frecuencia').value);
+      const aporte = parseFloat(document.getElementById('aporte').value) || 0;
+
+      if (isNaN(capital) || isNaN(tasa) || isNaN(años) || isNaN(frecuencia)) {
+        document.getElementById('resultado').innerText = 'Por favor, rellene todos los campos correctamente.';
+        return;
+      }
+
+      let saldo = capital;
+      const totalPeriodos = años * frecuencia;
+      const tasaPeriodo = tasa / frecuencia;
+      const historial = [];
+
+      for (let i = 1; i <= totalPeriodos; i++) {
+        saldo = saldo * (1 + tasaPeriodo) + aporte;
+        if (i % frecuencia === 0) {
+          historial.push({ año: i / frecuencia, monto: saldo });
+        }
+      }
+
+      document.getElementById('resultado').innerText = `Monto final: $${saldo.toFixed(2)}`;
+
+      const ctx = document.getElementById('grafica').getContext('2d');
+      const data = {
+        labels: historial.map(p => `Año ${p.año}`),
+        datasets: [{
+          label: 'Crecimiento del capital',
+          data: historial.map(p => p.monto.toFixed(2)),
+          borderColor: 'green',
+          fill: false
+        }]
+      };
+
+      if (window.miGrafica) {
+        window.miGrafica.destroy();
+      }
+
+      window.miGrafica = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
